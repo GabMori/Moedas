@@ -44,15 +44,21 @@
         </form>
 
         <?php
-        function calcularConversao($quantia, $taxaCambio) {
-            return $quantia * $taxaCambio;
-        }
+          function validarQuantiasPositivas($quantias) {
+              return array_reduce($quantias, function($acc, $quantia) {
+                  return $acc && (float)trim($quantia) > 0;
+              }, true);
+          }
 
-        function aplicarConversao(array $quantias, $taxaCambio) {
-            return array_map(function ($quantia) use ($taxaCambio) {
-                return calcularConversao((float)trim($quantia), $taxaCambio);
-            }, $quantias);
-        }
+          function calcularConversao($quantia, $taxaCambio) {
+              return $quantia * $taxaCambio;
+          }
+
+          function aplicarConversao(array $quantias, $taxaCambio) {
+              return array_map(function ($quantia) use ($taxaCambio) {
+                  return calcularConversao((float)trim($quantia), $taxaCambio);
+              }, $quantias);
+          }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $moeda1 = $_POST['moeda1'];
@@ -60,24 +66,22 @@
             $quantias = explode(',', $_POST['quantias']);
             $taxaCambio = (float)$_POST['taxaCambio'];
 
-            if ($moeda1 === $moeda2) {
-
+            if (!validarQuantiasPositivas($quantias)) {
+                echo "<p>Por favor, insira valores positivos para as quantias!</p>";
+            } elseif ($moeda1 === $moeda2) {
                 echo "<p>Por favor, insira moedas diferentes!</p>";
-
             } else {
                 $resultados = aplicarConversao($quantias, $taxaCambio);
 
                 echo "<p>Conversões de $moeda1 para $moeda2:</p>";
                 echo "<ul>";
-
                 foreach ($resultados as $index => $resultado) {
-                  
                     echo "<li>{$quantias[$index]} $moeda1 -> " . number_format($resultado, 2) . " $moeda2</li>";
                 }
                 echo "</ul>";
             }
         }
-        ?>
+?>
     </div>
 </body>
 </html>
